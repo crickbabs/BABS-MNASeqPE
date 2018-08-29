@@ -1,5 +1,4 @@
-# PIPELINE & DOCS UNDER CONSTRUCTION.  
-# ETA OCTOBER 2018.
+# PIPELINE & DOCS UNDER CONSTRUCTION. ETA OCTOBER 2018.
 
 # ![BABS-MNASeqPE](https://raw.githubusercontent.com/crickbabs/BABS-MNASeqPE/master/docs/images/BABS-MNASeqPE_logo.png)
 
