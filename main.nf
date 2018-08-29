@@ -11,8 +11,6 @@ vim: syntax=groovy
  https://github.com/crickbabs/BABS-MNASeqPE
  #### Authors
  Harshil Patel <harshil.patel@crick.ac.uk>
- Philip East   <philip.east@crick.ac.uk>
- Nourdine Bah  <nourdine.bah@crick.ac.uk>
 -------------------------------------------------------------------------------
 */
 
