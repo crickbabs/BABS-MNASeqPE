@@ -1,0 +1,30 @@
+{
+    "filters" : [
+        { "id" : "insert_neg_min",
+          "insertSize" : ">=-200"
+        },
+
+        { "id" : "insert_neg_max",
+          "insertSize" : "<=-100"
+        },
+
+        { "id" : "insert_pos_min",
+          "insertSize" : ">=100"
+        },
+
+        { "id" : "insert_pos_max",
+          "insertSize" : "<=200"
+        },
+
+        { "id" : "mismatch",
+          "tag" : "XM:<=3"
+        },
+
+        { "id" : "cigar",
+          "cigar" : "*S*"
+        }
+    ],
+
+    "rule" : " insert_neg_min & insert_neg_max & insert_pos_min & insert_pos_max & mismatch & !cigar "
+
+}

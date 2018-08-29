@@ -1,0 +1,105 @@
+# This is an example configuration file for FastQ Screen
+
+############################
+## Bowtie, Bowtie 2 or BWA #
+############################
+## If the Bowtie, Bowtie 2 or BWA binary is not in your PATH, you can set
+## this value to tell the program where to find your chosen aligner.  Uncomment
+## the relevant line below and set the appropriate location.  Please note,
+## this path should INCLUDE the executable filename.
+
+#BOWTIE	/usr/local/bin/bowtie/bowtie
+#BOWTIE2 /usr/local/bowtie2/bowtie2
+#BWA /usr/local/bwa/bwa
+
+############################################
+## Bismark (for bisulfite sequencing only) #
+############################################
+## If the Bismark binary is not in your PATH then you can set this value to
+## tell the program where to find it.  Uncomment the line below and set the
+## appropriate location. Please note, this path should INCLUDE the executable
+## filename.
+
+#BISMARK	/usr/local/bin/bismark/bismark
+
+############
+## Threads #
+############
+## Genome aligners can be made to run across multiple CPU cores to speed up
+## searches.  Set this value to the number of cores you want for mapping reads.
+
+THREADS		8
+
+##############
+## DATABASES #
+##############
+## This section enables you to configure multiple genomes databases (aligner index
+## files) to search against in your screen.  For each genome you need to provide a
+## database name (which can't contain spaces) and the location of the aligner index
+## files.
+##
+## The path to the index files SHOULD INCLUDE THE BASENAME of the index, e.g:
+## /data/public/Genomes/Human_Bowtie/GRCh37/Homo_sapiens.GRCh37
+## Thus, the index files (Homo_sapiens.GRCh37.1.bt2, Homo_sapiens.GRCh37.2.bt2, etc.)
+## are found in a folder named 'GRCh37'.
+##
+## If, for example, the Bowtie, Bowtie2 and BWA indices of a given genome reside in
+## the SAME FOLDER, a SINLGE path may be provided to ALL the of indices.  The index
+## used will be the one compatible with the chosen aligner (as specified using the
+## --aligner flag).
+##
+## The entries shown below are only suggested examples, you can add as many DATABASE
+## sections as required, and you can comment out or remove as many of the existing
+## entries as desired.  We suggest including genomes and sequences that may be sources
+## of contamination either because they where run on your sequencer previously, or may
+## have contaminated your sample during the library preparation step.
+##
+## Human - sequences available from
+## ftp://ftp.ensembl.org/pub/current/fasta/homo_sapiens/dna/
+#DATABASE	Human	/data/public/Genomes/Human_Bowtie/GRCh37/Homo_sapiens.GRCh37
+##
+## Mouse - sequence available from
+## ftp://ftp.ensembl.org/pub/current/fasta/mus_musculus/dna/
+#DATABASE	Mouse	/data/public/Genomes/Mouse/NCBIM37/Mus_musculus.NCBIM37
+##
+## Ecoli- sequence available from EMBL accession U00096.2
+#DATABASE	Ecoli	/data/public/Genomes/Ecoli/Ecoli
+##
+## PhiX - sequence available from Refseq accession NC_001422.1
+#DATABASE	PhiX	/data/public/Genomes/PhiX/phi_plus_SNPs
+##
+## Adapters - sequence derived from the FastQC contaminats file found at: www.bioinformatics.babraham.ac.uk/projects/fastqc
+#DATABASE	Adapters	/data/public/Genomes/Contaminants/Contaminants
+##
+## Vector - Sequence taken from the UniVec database
+## http://www.ncbi.nlm.nih.gov/VecScreen/UniVec.html
+#DATABASE	Vectors		/data/public/Genomes/Vectors/Vectors
+
+################################## BOWTIE2 INDICES ##################################
+
+DATABASE  HUMAN         /camp/svc/reference/Genomics/babs/contamination_screen/homo_sapiens/hg19/bowtie2/hg19
+DATABASE  HUMAN_RRNA    /camp/svc/reference/Genomics/babs/contamination_screen/homo_sapiens/hg19/rRNA/bowtie2/hg19_rRNA
+DATABASE  MOUSE         /camp/svc/reference/Genomics/babs/contamination_screen/mus_musculus/mm10/bowtie2/mm10
+DATABASE  MOUSE_RRNA    /camp/svc/reference/Genomics/babs/contamination_screen/mus_musculus/mm10/rRNA/bowtie2/mm10_rRNA
+DATABASE  TDEVIL        /camp/svc/reference/Genomics/babs/contamination_screen/sarcophilus_harrisii/sarHar1/bowtie2/sarHar1
+DATABASE  OPOSSUM       /camp/svc/reference/Genomics/babs/contamination_screen/monodelphis_domestica/monDom5/bowtie2/monDom5
+DATABASE  RAT           /camp/svc/reference/Genomics/babs/contamination_screen/rattus_norvegicus/rn6/bowtie2/rn6
+DATABASE  CHICKEN       /camp/svc/reference/Genomics/babs/contamination_screen/gallus_gallus/galGal4/bowtie2/galGal4
+DATABASE  FROG          /camp/svc/reference/Genomics/babs/contamination_screen/xenopus_tropicalis/xenTro3/bowtie2/xenTro3
+DATABASE  ZEBRAFISH     /camp/svc/reference/Genomics/babs/contamination_screen/danio_rerio/danRer10/bowtie2/danRer10
+DATABASE  FLY           /camp/svc/reference/Genomics/babs/contamination_screen/drosophila/dm6/bowtie2/dm6
+DATABASE  WORM          /camp/svc/reference/Genomics/babs/contamination_screen/caenorhabditis_elegans/ce10/bowtie2/ce10
+DATABASE  YEAST         /camp/svc/reference/Genomics/babs/contamination_screen/saccharomyces_cerevisiae/sacCer3/bowtie2/sacCer3
+DATABASE  POMBE         /camp/svc/reference/Genomics/babs/contamination_screen/schizosaccharomyces_pombe/spombe/bowtie2/spombe
+DATABASE  ECOLI         /camp/svc/reference/Genomics/babs/contamination_screen/escherichia_coli/k12/bowtie2/ecoli_k12
+DATABASE  GONDII        /camp/svc/reference/Genomics/babs/contamination_screen/toxoplasma_gondii/bowtie2/t_gondii
+DATABASE  TUBERCULOSIS  /camp/svc/reference/Genomics/babs/contamination_screen/mycobacterium_tuberculosis/h37rv/bowtie2/Mtb_H37Rv
+DATABASE  HYORHINIS     /camp/svc/reference/Genomics/babs/contamination_screen/mycoplasma_hyorhinis/dbs_1050/bowtie2/M_hyorhinis
+DATABASE  ACNES         /camp/svc/reference/Genomics/babs/contamination_screen/propionibacterium_acnes/c1/bowtie2/P_acnes
+DATABASE  ADAPTER       /camp/svc/reference/Genomics/babs/contamination_screen/adapter/bowtie2/contaminant_list
+DATABASE  ERCC92        /camp/svc/reference/Genomics/babs/contamination_screen/rna_spike_in/ERCC92/bowtie2/ERCC92
+DATABASE  VECTOR        /camp/svc/reference/Genomics/babs/contamination_screen/univec/bowtie2/univec
+DATABASE  XIST          /camp/svc/reference/Genomics/babs/contamination_screen/sex_marker/bowtie2/xist
+DATABASE  PHIX          /camp/svc/reference/Genomics/babs/contamination_screen/phix/phix/bowtie2/phix
+
+#####################################################################################
