@@ -6,7 +6,7 @@ vim: syntax=groovy
     B A B S - M N A S E Q  P A I R E D - E N D   B E S T    P R A C T I C E
 ==============================================================================
  MNASeq Analysis Pipeline For Paired-End Illumina Samples.
- Started 11th May 2018.
+ Started 29th August 2018.
  #### Homepage / Documentation
  https://github.com/crickbabs/BABS-MNASeqPE
  #### Authors
