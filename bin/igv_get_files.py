@@ -37,7 +37,7 @@ def igv_get_files(ResultsDir,OutFile):
     funcs.makedir(os.path.dirname(OutFile))
 
     ## GET REPLICATE-LEVEL FILES
-    fileList = []
+    sampleFileDict = {}
     for ifile in funcs.recursive_glob(os.path.join(ResultsDir,'align/replicateLevel/bigwig/'), '*.bigWig'):
         extension = os.path.splitext(ifile)[1]
         sampleid = ''
@@ -50,12 +50,11 @@ def igv_get_files(ResultsDir,OutFile):
         if not sampleFileDict.has_key(sampleid):
             sampleFileDict[sampleid] = []
         sampleFileDict[sampleid].append((ifile,'0,102,0'))
-    for sampleid in sorted(sampleFileDict.keys()):
-        fileList += sampleFileDict[sampleid]
 
     fout = open(OutFile,'w')
-    for ifile,colour in fileList:
-        fout.write('%s\t%s\n' % (ifile,colour))
+    for sampleid in sorted(sampleFileDict.keys()):
+        for ifile,colour in sampleFileDict[sampleid]:
+            fout.write('%s\t%s\n' % (ifile,colour))
     fout.close()
 
 ############################################

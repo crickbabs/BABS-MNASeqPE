@@ -40,11 +40,13 @@ def helpMessage() {
 
     References:                     If not specified in the configuration file or you wish to overwrite any of the reference parameters
       --fasta                       Path to Fasta reference file containing all chromosomes/contigs
-      --gtf                         Path to GTF file
       --bwa_index                   Path to BWA index
 
     Trimming options:
       --adapter                     3' adapter sequence trimmed by cutadapt (default: AGATCGGAAGAGC)
+
+    Filtering options:
+      --rm_duplicates               Remove duplicate reads
 
     Output options:
       --outdir                      The output directory where the results will be saved (default: './results')
@@ -77,9 +79,9 @@ params.design = false
 params.genome = false
 params.profile = false
 params.fasta = params.genome ? params.genomes[ params.genome ].fasta ?: false : false
-params.gtf = params.genome ? params.genomes[ params.genome ].gtf ?: false : false
 params.bwa_index = params.genome ? params.genomes[ params.genome ].bwa_index ?: false : false
 params.adapter = false
+//params.rm_duplicates = rm_duplicates
 params.outdir = './results'
 params.outdir_abspath = new File(params.outdir).getCanonicalPath().toString()
 params.name = false
@@ -126,14 +128,6 @@ if( params.fasta && file(params.fasta).exists() ){
     exit 1, "Genome fasta file not found: ${params.fasta}"
 }
 
-if( params.gtf && file(params.gtf).exists() ){
-    Channel
-      .fromPath(params.gtf)
-      .into { gtf_igv_ch }
-} else {
-    exit 1, "GTF file not found: ${params.gtf}"
-}
-
 if( params.bwa_index && file("${params.bwa_index}.amb").exists() ) {
     Channel
         .fromPath("${params.bwa_index}*.{amb,ann,bwt,pac,sa}")
@@ -177,7 +171,6 @@ summary['Run name']                   = custom_runName ?: workflow.runName
 summary['Design file']                = params.design
 summary['Genome version']             = params.genome
 summary['Genome fasta file']          = params.fasta
-summary['GTF annotation file']        = params.gtf
 summary['BWA index']                  = params.bwa_index
 summary['Adapter sequence']           = adapter_seq
 summary['Max memory']                 = params.max_memory
@@ -239,7 +232,6 @@ process prep_genome {
           cut -f 1,2 ${fasta}.fai > ${fasta}.sizes
           awk 'BEGIN{OFS="\t"}{print \$1, '0' , \$2}' ${fasta}.sizes > ${fasta}.bed
           """
-        }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -583,8 +575,8 @@ process markdup_collectmetrics {
         """
 }
 
-// FILTER BAM FILE TO KEEP (1) UNIQUELY MAPPED, (2) PRIMARY ALIGNMENT, (3) NON-DUPLICATES, (4) NON-MITOCHONDRIAL (5) IN FR ORIENTATION ON SAME CHROMOSOME
-//                         (6) NON-SOFTCLIPPED (bamtools), (7) INSERT SIZE < 2KB (bamtools), (8) MISMATCH <= 3 (bamtools)
+// FILTER BAM FILE TO KEEP (1) UNIQUELY MAPPED, (2) PRIMARY ALIGNMENT, (3) IN FR ORIENTATION ON SAME CHROMOSOME
+//                         (4) NON-SOFTCLIPPED (bamtools), (5) INSERT SIZE > 100BP & < 200BP (bamtools), (6) MISMATCH <= 3 (bamtools)
 process filter_bam {
 
     tag "$sampleid"
@@ -657,7 +649,7 @@ process rm_orphan_sort_bam {
                         }
 
     input:
-    set val(sampleid), file(filter_bam), file(orphan_bam) from filter_bam_sort_ch.join(rm_orphan_ch, by: [0])
+    set val(sampleid), file(orphan_bam) from rm_orphan_ch
 
     output:
     set val(sampleid), file("*.{bam,bam.bai,flagstat}") into rm_orphan_sort_bam_replicate_ch,
@@ -808,12 +800,9 @@ process merge_replicate_rmdup {
 
     output:
     set val(sampleid), file("*.{bam,bam.bai}") into merge_replicate_rmdup_name_bam_ch,
-                                                    merge_replicate_rmdup_bedgraph_ch,
-                                                    merge_replicate_rmdup_macs2_ch,
-                                                    merge_replicate_rmdup_macs2_frip_ch
+                                                    merge_replicate_rmdup_bedgraph_ch
     set val(sampleid), file("*.flagstat") into merge_replicate_rmdup_flagstat_ch,
-                                               merge_replicate_rmdup_flagstat_bedgraph_ch,
-                                               merge_replicate_rmdup_flagstat_macs2_frip_ch
+                                               merge_replicate_rmdup_flagstat_bedgraph_ch
 
     script:
         out_prefix="${sampleid}.RpL.rmD"
@@ -938,24 +927,38 @@ process merge_replicate_bam_to_bed {
         """
 }
 
-process merge_replicate_danpos {
-
-    tag "$sampleid"
-
-    input:
-    set val(sampleid), file(bed) from merge_replicate_bam_to_bed_ch
-
-    output:
-    set val(sampleid), file("*.xls") into merge_replicate_danpos_xls_ch
-    set val(sampleid), file("*.summits.bed") into merge_replicate_danpos_summits_ch
-    set val(sampleid), file("*.positions.bed") into merge_replicate_danpos_positions_ch
-    set val(sampleid), file("*.wig") into merge_replicate_danpos_wig_ch
-
-    script:
-        """
-        danpos.py dpos ${bed} --paired 1 --span 1 --smooth_width 20 --width 40 --count 1000000
-        """
-}
+// process merge_replicate_danpos {
+//
+//     tag "$sampleid"
+//
+//     //publishDir "${params.outdir}/align/replicateLevel/danpos", mode: 'copy'
+//
+//     echo true
+//
+//     input:
+//     set val(sampleid), file(bed) from merge_replicate_bam_to_bed_ch
+//
+//     output:
+//     set val(sampleid), file("./result/pooled/*.xls") into merge_replicate_danpos_xls_ch
+//     set val(sampleid), file("./result/pooled/*.summits.bed") into merge_replicate_danpos_summits_ch
+//     set val(sampleid), file("./result/pooled/*.positions.bed") into merge_replicate_danpos_positions_ch
+//     set val(sampleid), file("./result/pooled/*.wig") into merge_replicate_danpos_wig_ch
+//     set val(sampleid), file("./result/pooled/*.sysout") into merge_replicate_danpos_sysout_ch
+//
+//     script:
+//         out_prefix="${sampleid}.RpL.rmD"
+//         """
+//         danpos.py dpos \\
+//                   ./${bed} \\
+//                   --paired 1 \\
+//                   --span 1 \\
+//                   --smooth_width 20 \\
+//                   --width 40 \\
+//                   --count 1000000 \\
+//                   --out ./result/
+//                   >> ./result/pooled/${out_prefix}.danpos.sysout 2>&1
+//         """
+// }
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -964,6 +967,11 @@ process merge_replicate_danpos {
 /* --                                                                     -- */
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
+
+merge_replicate_bigwig_ch.map { it -> [ "igv", it[1] ] }
+                         .groupTuple(by: [0])
+                         .map { it ->  it[1].flatten().sort() }
+                         .set { igv_input_ch }
 
 // CUSTOM SCRIPT TO REORDER TRACKS IN IGV SESSION FILE MORE SENSIBLY.
 // PROBABLY POSSIBLE WITH NEXTFLOW BUT MUCH EASIER IN PYTHON!
@@ -974,9 +982,8 @@ process igv_session {
     publishDir "${params.outdir}/igv", mode: 'copy'
 
     input:
-    file igvs from merge_replicate_bigwig_ch.map { it -> it[1] }
+    file igvs from igv_input_ch
     file fasta from fasta_igv_ch.collect()
-    file gtf from gtf_igv_ch.collect()
 
     output:
     file "*.{xml,txt}" into igv_session_ch
@@ -984,7 +991,6 @@ process igv_session {
     script:
         """
         [ ! -f ${params.outdir_abspath}/genome/${fasta.getName()} ] && ln -s ${params.fasta} ${params.outdir_abspath}/genome/${fasta.getName()}
-        [ ! -f ${params.outdir_abspath}/genome/${gtf.getName()} ] && ln -s ${params.gtf} ${params.outdir_abspath}/genome/${gtf.getName()}
         python $baseDir/bin/igv_get_files.py ${params.outdir_abspath} igv_files.txt
         python $baseDir/bin/igv_files_to_session.py igv_session.xml igv_files.txt ${params.outdir_abspath}/genome/${fasta.getName()}
         """
