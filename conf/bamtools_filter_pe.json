@@ -19,6 +19,6 @@
         }
     ],
 
-    "rule" : " insert_neg_range || insert_pos_range & mismatch & !cigar "
+    "rule" : " ( insert_neg_range | insert_pos_range ) & mismatch & !cigar "
 
 }
