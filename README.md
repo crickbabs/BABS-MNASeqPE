@@ -20,7 +20,7 @@ The pipeline was written by [The Bioinformatics & Biostatistics Group](https://w
     * reads that are unmapped ([`SAMtools`](https://sourceforge.net/projects/samtools/files/samtools/))
     * reads that map to multiple locations ([`SAMtools`](https://sourceforge.net/projects/samtools/files/samtools/))
     * reads containing > 3 mismatches in either read of the pair ([`BAMTools`](https://github.com/pezmaster31/bamtools))
-    * reads that have a user-defined insert size (=> 100bp & <= 200bp default; [`BAMTools`](https://github.com/pezmaster31/bamtools))
+    * reads that have a user-defined insert size ([`BAMTools`](https://github.com/pezmaster31/bamtools))
     * reads that are soft-clipped ([`BAMTools`](https://github.com/pezmaster31/bamtools))
     * reads that map to different chromosomes ([`Pysam`](http://pysam.readthedocs.io/en/latest/installation.html))
     * reads that arent in FR orientation ([`Pysam`](http://pysam.readthedocs.io/en/latest/installation.html))
