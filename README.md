@@ -54,7 +54,7 @@ The pipeline was written by the [The Bioinformatics & Biostatistics Group](https
 
 The pipeline was developed by [Harshil Patel](mailto:harshil.patel@crick.ac.uk).
 
-The [NGI-RNAseq](https://github.com/SciLifeLab/NGI-RNAseq) pipeline developed by Phil Ewels was used a template for this pipeline. Many thanks to Phil and the team at SciLifeLab. The help, tips and tricks provided by Paolo Di Tommaso were also invaluable. Thank you!
+The [NGI-RNAseq](https://github.com/SciLifeLab/NGI-RNAseq) pipeline developed by Phil Ewels was used a template for this pipeline. Many thanks to Phil and the team at SciLifeLab.
 
 ## License
 
