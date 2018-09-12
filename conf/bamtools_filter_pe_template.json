@@ -1,13 +1,13 @@
 {
     "filters" : [
         { "id" : "insert_neg_range",
-          "insertSize" : ">=-200",
-          "insertSize" : "<=-100"
+          "insertSize" : ">=-MIN_INSERT_SIZE",
+          "insertSize" : "<=-MAX_INSERT_SIZE"
         },
 
         { "id" : "insert_pos_range",
-          "insertSize" : ">=100",
-          "insertSize" : "<=200"
+          "insertSize" : ">=MIN_INSERT_SIZE",
+          "insertSize" : "<=MAX_INSERT_SIZE"
         },
 
         { "id" : "mismatch",

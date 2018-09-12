@@ -46,7 +46,9 @@ def helpMessage() {
       --adapter                     3' adapter sequence trimmed by cutadapt (default: AGATCGGAAGAGC)
 
     Filtering options:
-      --rm_duplicates               Remove duplicate reads
+      --insert_min                  Minimum insert size for filtering of mono-nucleosome paired-end reads (default: 100)
+      --insert_max                  Maximum insert size for filtering of mono-nucleosome paired-end reads (default: 200)
+      --rm_duplicates               Remove duplicate reads from BAM alignment file
 
     Output options:
       --outdir                      The output directory where the results will be saved (default: './results')
@@ -81,14 +83,16 @@ params.profile = false
 params.fasta = params.genome ? params.genomes[ params.genome ].fasta ?: false : false
 params.bwa_index = params.genome ? params.genomes[ params.genome ].bwa_index ?: false : false
 params.adapter = false
-//params.rm_duplicates = rm_duplicates
+params.rm_duplicates = false
+params.insert_min = 100
+params.insert_max = 200
 params.outdir = './results'
 params.outdir_abspath = new File(params.outdir).getCanonicalPath().toString()
 params.name = false
 params.project = false
 params.multiqc_config = "$baseDir/conf/multiqc_config.yaml"
 params.fastqscreen_config = "$baseDir/conf/fastq_screen.conf.txt"
-params.bamtools_filter_pe_config = "$baseDir/conf/bamtools_filter_pe.json"
+params.bamtools_filter_pe_config = "$baseDir/conf/bamtools_filter_pe_template.json"
 
 // PRESET ADAPTER TRIMMING OPTION
 adapter_seq = 'AGATCGGAAGAGC'
@@ -110,9 +114,15 @@ output_docs = file("$baseDir/docs/output.md")
 
 multiqc_config = file(params.multiqc_config)
 if( !multiqc_config.exists() ) exit 1, "MultiQC config file not found: ${params.multiqc_config}"
-bamtools_filter_pe_config = file(params.bamtools_filter_pe_config)
-if( !bamtools_filter_pe_config.exists() ) exit 1, "BamTools filter config file not found: ${params.bamtools_filter_pe_config}"
 fastqscreen_config = file(params.fastqscreen_config)
+
+if( file(params.bamtools_filter_pe_config).exists() ){
+    Channel
+      .fromPath(params.bamtools_filter_pe_config)
+      .set { bamtools_filter_pe_config_ch }
+} else {
+    exit 1, "BamTools filter config file not found: ${params.bamtools_filter_pe_config}"
+}
 
 ////////////////////////////////////////////////////
 /* --          CHECK INPUT FILES               -- */
@@ -173,6 +183,9 @@ summary['Genome version']             = params.genome
 summary['Genome fasta file']          = params.fasta
 summary['BWA index']                  = params.bwa_index
 summary['Adapter sequence']           = adapter_seq
+summary['Minimum insert size']        = params.insert_min
+summary['Maximum insert size']        = params.insert_max
+summary['Remove duplicates']          = params.rm_duplicates
 summary['Max memory']                 = params.max_memory
 summary['Max CPUs']                   = params.max_cpus
 summary['Max time']                   = params.max_time
@@ -220,17 +233,22 @@ process prep_genome {
 
     input:
     file fasta from fasta_index_ch
+    file bamtools from bamtools_filter_pe_config_ch
 
     output:
     file "*.fai" into prep_genome_index_ch
     file "*.sizes" into prep_genome_sizes_replicate_bedgraph_ch,
                         prep_genome_sizes_replicate_bigwig_ch
+    file "*.json" into prep_genome_bamtools_filter_pe_config_ch
 
     script:
           """
           samtools faidx ${fasta}
           cut -f 1,2 ${fasta}.fai > ${fasta}.sizes
           awk 'BEGIN{OFS="\t"}{print \$1, '0' , \$2}' ${fasta}.sizes > ${fasta}.bed
+
+          sed 's/MIN_INSERT_SIZE/${params.insert_min}/g' <${bamtools} >bamtools_filter_pe.json
+          sed -i -e 's/MAX_INSERT_SIZE/${params.insert_max}/g' bamtools_filter_pe.json
           """
 }
 
@@ -585,6 +603,7 @@ process filter_bam {
 
     input:
     set val(sampleid), file(bam) from markdup_filter_bam_ch
+    file bamtools_config from prep_genome_bamtools_filter_pe_config_ch.collect()
 
     output:
     set val(sampleid), file("*.flT.bam") into filter_bam_ch
@@ -598,21 +617,40 @@ process filter_bam {
         // 0x0100 = not primary alignment
         // 0x0400 = read is PCR or optical duplicate
         out_prefix="${sampleid}.flT"
-        """
-        samtools view \\
-                 -f 0x001 \\
-                 -F 0x004 \\
-                 -F 0x0008 \\
-                 -F 0x0100 \\
-                 -q 1 \\
-                 -b ${bam[0]} \\
-                 | bamtools filter \\
-                            -out ${out_prefix}.sorted.bam \\
-                            -script ${bamtools_filter_pe_config}
-        samtools index ${out_prefix}.sorted.bam
-        samtools flagstat ${out_prefix}.sorted.bam > ${out_prefix}.sorted.bam.flagstat
-        samtools sort -n -@ ${task.cpus} -o ${out_prefix}.bam -T ${out_prefix} ${out_prefix}.sorted.bam
-        """
+        if (params.rm_duplicates) {
+            """
+            samtools view \\
+                     -f 0x001 \\
+                     -F 0x004 \\
+                     -F 0x0008 \\
+                     -F 0x0100 \\
+                     -F 0x0400 \\
+                     -q 1 \\
+                     -b ${bam[0]} \\
+                     | bamtools filter \\
+                                -out ${out_prefix}.sorted.bam \\
+                                -script ${bamtools_config}
+            samtools index ${out_prefix}.sorted.bam
+            samtools flagstat ${out_prefix}.sorted.bam > ${out_prefix}.sorted.bam.flagstat
+            samtools sort -n -@ ${task.cpus} -o ${out_prefix}.bam -T ${out_prefix} ${out_prefix}.sorted.bam
+            """
+        } else {
+            """
+            samtools view \\
+                     -f 0x001 \\
+                     -F 0x004 \\
+                     -F 0x0008 \\
+                     -F 0x0100 \\
+                     -q 1 \\
+                     -b ${bam[0]} \\
+                     | bamtools filter \\
+                                -out ${out_prefix}.sorted.bam \\
+                                -script ${bamtools_config}
+            samtools index ${out_prefix}.sorted.bam
+            samtools flagstat ${out_prefix}.sorted.bam > ${out_prefix}.sorted.bam.flagstat
+            samtools sort -n -@ ${task.cpus} -o ${out_prefix}.bam -T ${out_prefix} ${out_prefix}.sorted.bam
+            """
+        }
 }
 
 // FILTER BAM FILE TO REMOVE READS WHERE ONE MATE HAS BEEN PHYSICALLY FILTERED OUT OF BAM FILE FROM PREVIOUS STEP.
@@ -808,11 +846,19 @@ process merge_replicate_rmdup {
         out_prefix="${sampleid}.RpL.rmD"
         bam_files = orphan_bams.findAll { it.toString().endsWith('.bam') }.sort()
         if (bam_files.size() > 1) {
-            """
-            samtools view -bF 0x400 ${markdup_bam[0]} > ${out_prefix}.sorted.bam
-            samtools index ${out_prefix}.sorted.bam
-            samtools flagstat ${out_prefix}.sorted.bam > ${out_prefix}.sorted.bam.flagstat
-            """
+            if (params.rm_duplicates) {
+                """
+                samtools view -bF 0x400 ${markdup_bam[0]} > ${out_prefix}.sorted.bam
+                samtools index ${out_prefix}.sorted.bam
+                samtools flagstat ${out_prefix}.sorted.bam > ${out_prefix}.sorted.bam.flagstat
+                """
+            } else {
+                """
+                cp ${markdup_bam[0]} ${out_prefix}.sorted.bam
+                samtools index ${out_prefix}.sorted.bam
+                samtools flagstat ${out_prefix}.sorted.bam > ${out_prefix}.sorted.bam.flagstat
+                """
+            }
         } else {
             """
             cp ${bam_files[0]} ${out_prefix}.sorted.bam
