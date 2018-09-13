@@ -31,11 +31,11 @@ def helpMessage() {
     Usage:
     The typical command for running the pipeline is as follows:
 
-    nextflow run main.nf --design design.csv --genome hg19 -profile conda
+    nextflow run main.nf --design design.csv --genome sacCer3 -profile conda
 
     Mandatory arguments:
       --design                      Comma separted file containing information about the samples in the experiment (see README.md)
-      --genome                      Genome shortname (e.g. hg19)
+      --genome                      Genome shortname (e.g. sacCer3)
       -profile                      Hardware config to use i.e. conda, babs_modules, standard
 
     References:                     If not specified in the configuration file or you wish to overwrite any of the reference parameters
