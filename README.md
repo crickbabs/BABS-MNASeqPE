@@ -29,8 +29,9 @@ The pipeline was written by [The Bioinformatics & Biostatistics Group](https://w
     * Re-mark duplicates ([`picard`](https://broadinstitute.github.io/picard/))
     * Remove duplicate reads (optional; [`SAMtools`](https://sourceforge.net/projects/samtools/files/samtools/))
     * Create normalised bigWig files scaled to 1 million mapped read pairs ([`BEDTools`](https://github.com/arq5x/bedtools2/), [`wigToBigWig`](http://hgdownload.soe.ucsc.edu/admin/exe/))
-7. Create IGV session file containing bigWig tracks for data visualisation ([`IGV`](https://software.broadinstitute.org/software/igv/)).
-8. Collect and present QC at the raw read and alignment-level ([`MultiQC`](http://multiqc.info/))
+7.  * Call nucleosome positions and generate smoothed, normalised coverage wig file that can be used to generate occupancy profile plots between samples across features of interest ([`DANPOS2`](https://sites.google.com/site/danposdoc/))
+8. Create IGV session file containing bigWig tracks for data visualisation ([`IGV`](https://software.broadinstitute.org/software/igv/)).
+9. Collect and present QC at the raw read and alignment-level ([`MultiQC`](http://multiqc.info/))
 
 ## Documentation
 

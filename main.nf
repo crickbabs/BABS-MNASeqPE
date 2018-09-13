@@ -974,38 +974,43 @@ process merge_replicate_bam_to_bed {
         """
 }
 
-// process merge_replicate_danpos {
-//
-//     tag "$sampleid"
-//
-//     //publishDir "${params.outdir}/align/replicateLevel/danpos", mode: 'copy'
-//
-//     echo true
-//
-//     input:
-//     set val(sampleid), file(bed) from merge_replicate_bam_to_bed_ch
-//
-//     output:
-//     set val(sampleid), file("./result/pooled/*.xls") into merge_replicate_danpos_xls_ch
-//     set val(sampleid), file("./result/pooled/*.summits.bed") into merge_replicate_danpos_summits_ch
-//     set val(sampleid), file("./result/pooled/*.positions.bed") into merge_replicate_danpos_positions_ch
-//     set val(sampleid), file("./result/pooled/*.wig") into merge_replicate_danpos_wig_ch
-//     set val(sampleid), file("./result/pooled/*.sysout") into merge_replicate_danpos_sysout_ch
-//
-//     script:
-//         out_prefix="${sampleid}.RpL.rmD"
-//         """
-//         danpos.py dpos \\
-//                   ./${bed} \\
-//                   --paired 1 \\
-//                   --span 1 \\
-//                   --smooth_width 20 \\
-//                   --width 40 \\
-//                   --count 1000000 \\
-//                   --out ./result/
-//                   >> ./result/pooled/${out_prefix}.danpos.sysout 2>&1
-//         """
-// }
+process merge_replicate_danpos {
+
+    tag "$sampleid"
+
+    publishDir "${params.outdir}/align/replicateLevel/danpos", mode: 'copy',
+                saveAs: {filename ->
+                            if (filename.endsWith(".sysout")) "sysout/$filename"
+                            else if (filename.endsWith(".wig.gz")) "$filename"
+                            else if (filename.endsWith(".xls")) "$filename"
+                            else null
+                        }
+
+    input:
+    set val(sampleid), file(bed) from merge_replicate_bam_to_bed_ch
+
+    output:
+    set val(sampleid), file("*.xls") into merge_replicate_danpos_xls_ch
+    set val(sampleid), file("*.wig.gz") into merge_replicate_danpos_wig_ch
+    set val(sampleid), file("*.sysout") into merge_replicate_danpos_sysout_ch
+
+    script:
+        out_prefix="${sampleid}.RpL.rmD"
+        """
+        danpos.py dpos \\
+                  ./${bed} \\
+                  --paired 1 \\
+                  --span 1 \\
+                  --smooth_width 20 \\
+                  --width 40 \\
+                  --count 1000000 \\
+                  --out ./result/ \\
+                  > ${out_prefix}.danpos.sysout 2>&1
+        mv ./result/*/*.wig .
+        mv ./result/*/*.xls .
+        gzip *.wig
+        """
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////

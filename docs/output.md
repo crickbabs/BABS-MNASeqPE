@@ -36,6 +36,7 @@ The following directories will be created in the output directory after the pipe
 | `align/replicateLevel/picard_metrics/`                       | Metrics file from MarkDuplicates.                                                                                                                                                                 |
 | `align/replicateLevel/sysout/`                               | Sysout files for various programs to aid in troubleshooting errors.                                                                                                                               |
 | `align/replicateLevel/bigwig/`                               | Normalised [bigWig](https://genome.ucsc.edu/goldenpath/help/bigWig.html) files scaled to 1 million mapped read pairs.                                                                             |
+| `align/replicateLevel/danpos/`                               | Normalised [wig](https://genome.ucsc.edu/goldenpath/help/wiggle.html) files scaled to 1 million mapped reads, and spreadsheet containing genome-wide nucleosome positions.                        |
 
 ### `genome/`
 
